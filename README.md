@@ -73,4 +73,8 @@ fn main() {
 
 在`riscv`库增加一个寄存器。提交了Pull Request：[rust-embedded/riscv#52](https://github.com/rust-embedded/riscv/pull/52)。未来可能要把页表支持放到这个库里面，等待以后成熟定型的工程设计出现，现在不着急。
 
-添加一些Rust常用的API风格，充分利用Rust宏的灵活特性。提交了Pull Request：[rcore-os/opensbi-rt#1](https://github.com/rcore-os/opensbi-rt/pulls)。希望以后能把SBI的功能分开成单独的库，只有运行时部分保留在这个crate中。
+添加一些Rust常用的API风格，充分利用Rust宏的灵活特性。提交了Pull Request：[rcore-os/opensbi-rt#1](https://github.com/rcore-os/opensbi-rt/pull/1)。希望以后能把SBI的功能分开成单独的库，只有运行时部分保留在这个crate中。
+
+### 3. 一些感悟
+
+从去年到今年年初，我一直在参与翻译《Writing an OS in Rust》。翻看其他同学的作业记录，我发现会有朋友为这本书的翻译提供建议，可能提到贡献者修改地很快，可能时间很长了，我也记不清是不是我通过的（哈哈）。写这本书的适合这样的建议非常重要，我一直没有机会感谢这些同学们。未来可能和一起翻译的几位朋友考虑出版这本书，虽然是x86架构的，一些Rust的思想也比较值得学习。未来几个月如果有机会，可能考虑抽时间修订这本书的代码和更多翻译，有机会就可以开始联系出版社了，翻译不精良，希望有出版社能高抬贵手吧，哈哈。
