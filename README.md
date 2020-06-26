@@ -109,7 +109,9 @@ Rust社区已有的中断实现通常没有参数，我在分发器函数里直�
 #[opensbi_rt::interrupt]
 fn SupervisorTimer() {
     static mut TICKS: usize = 0;
+
     sbi::legacy::set_timer(time::read64().wrapping_add(INTERVAL));
+
     *TICKS += 1;
     if *TICKS % 100 == 0 {
         println!("100 ticks~");
