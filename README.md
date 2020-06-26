@@ -124,24 +124,27 @@ fn SupervisorTimer() {
 ```rust
 // 主程序上下文：
 
-println!("hello world!"); // 主程序只会运行一次
-loop {}
+{
+    println!("hello world!"); // 主程序只会运行一次
+    loop {}
+}
 
 // 主程序只会运行一次，我们可以定义某种意义的“静态”变量，这个用let语句
 // 就可以实现。
 
 // 中断上下文：
+{
+    static mut TICKS: usize = 0;
 
-static mut TICKS: usize = 0;
+    *TICKS += 1; // 中断发生第一次
+    if *TICKS % 100 == 0 { println!("100 ticks!"); }
 
-*TICSK += 1; // 中断发生第一次
-if *TICKS % 100 == 0 { println!("100 ticks!"); }
+    *TICKS += 1; // 中断发生第二次
+    if *TICKS % 100 == 0 { println!("100 ticks!"); }
 
-*TICSK += 1; // 中断发生第二次
-if *TICKS % 100 == 0 { println!("100 ticks!"); }
-
-*TICSK += 1; // 中断发生第三次
-if *TICKS % 100 == 0 { println!("100 ticks!"); }
+    *TICKS += 1; // 中断发生第三次
+    if *TICKS % 100 == 0 { println!("100 ticks!"); }
+}
 
 // 中断可能发生多次，但是因为同一个中断在同一个Hart上不可能同时发生，
 // 所以访问静态的TICKS可以看作在同一个上下文内。
