@@ -189,6 +189,7 @@ RISC-V的trap分为中断（Interrupt）和异常（Exception）两部分。今�
 
 感谢学长的帮助，今天把opensbi-rt切分为了riscv-sbi-rt和riscv-sbi两个库。
 riscv-sbi-rt库包含S模式下最小的SBI运行时；riscv-sbi库提供了SBI提供的标准调用实现。
-添加了一些SBI函数。测试下来似乎除了legacy，似乎没有被qemu支持？很奇怪，明天再试试看
+这两个库未来如果做得好可以推到crates.io上去。
+添加了一些SBI函数。测试下来似乎除了legacy，似乎没有被qemu支持？很奇怪，明天再试试看。
 
 今天课业任务实在非常多，就先写到这儿了。
