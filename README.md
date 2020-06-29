@@ -372,3 +372,9 @@ Issue地址在[这里](https://github.com/rust-lang/rust/issues/29603)。好像2
 在debug模式下会莫名其妙死机（可能就是进异常了），然后删除这个println!之后就没有再出故障。
 今天忘记记录了，有一个情况竟然会执行std::hint::unreachable_unchecked，这让我非常意外，如果下次遇到这样
 的情况需要注意记录，以便排查。
+
+另外就是在IDE环境下不容易用`rust-analyzer`做实时检查。这个工具在vscode上常用，它似乎是通过`test`特性实现
+检查的，但是在没有`std`的目标下不存在`test`框架，在`.cargo/config`定义目标后就出现无法检查的问题。
+Phil-opp的博客提供了一个[自定义测试框架的方法](https://github.com/phil-opp/blog_os/blob/788d6a7e2295cc45cf327637c0ba58638d5f1346/blog/content/second-edition/posts/04-testing/index.md#custom-test-frameworks)。但这个方法[一直没有稳定](https://github.com/rust-lang/rust/blob/9ebf47851a357faa4cd97f4b1dc7835f6376e639/src/doc/unstable-book/src/language-features/custom-test-frameworks.md)，最好等到稳定后再考虑此种思路。
+现在实时检查几乎很难使用，如果不在`.cargo/config`定义目标，它默认使用当前系统，但`riscv`定义的结构和汇编代码
+就会被归为语法错误。如果在文件里定义目标，又因为没有test框架不能使用。暂时还是不好解决的问题。
