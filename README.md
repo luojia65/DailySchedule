@@ -649,7 +649,15 @@ size: build
 
 在项目根目录下，保存为名称为`justfile`的文件就可以了。
 
-如果还需要调试支持，还要添加以下内容：
+然后如果我们要运行内核，只需要输入：
+
+```shell
+just run
+```
+
+就和`make run`比较相似。类似地，还可以执行`just build`、`just asm`和`just size`等等指令。
+
+如果还需要GDB调试支持，还要添加以下内容：
 
 ```makefile
 gdb := "riscv64-unknown-elf-gdb"
