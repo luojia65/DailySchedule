@@ -546,5 +546,122 @@ fn main(hartid: usize, dtb: usize) {
 ### 1. 关于运行时`_start`部分的地址映射
 
 这两天频繁出现的问题和这个有关系。我们需要注意两个地址，一个是`pc`，一个是`sp`。
+可能和`ra`也是有关系的，但是考虑到操作系统的代码不需要返回，这里就不考虑main函数的`ra`了。
 
-有点累，明天再写……
+进入main函数之前，`pc`和`sp`都应该是虚拟地址`0xffffffff80xxxxxxx`。
+如果`pc`或者`sp`还是物理地址的空间`0x0000000080xxxxxxx`，代码还是能运行的，
+动态内存和内存页分配器也是能运行的。这似乎是因为我们在初始页里搭建了`0x0000000080xxxxxx`
+到它自身的映射，为了解决教程里题到“尴尬的情况”；但这个映射在`_start`里面页表刷新后依然存在。
+所以这个部分`pc`和`sp`假如还是物理地址，依然可以运行下去。
+
+问题出现在分页内存系统实现。如果`pc`和`sp`还是物理地址，我们分完的页都是基于链接器脚本的。
+链接器脚本的设定都是虚拟地址`0xffffffff80xxxxxxx`的区间，也就是说，`_stext`、
+`_etext`这些全都是虚拟地址的区间，我们分页保护的也是这些区间（而不是物理地址区间）。
+这时候，分页系统不再包含初始页面里`0x0000000080xxxxxxx`到它自己的映射。
+此时刷新TLB后，假如`pc`或`sp`还是物理地址，就将在页表中不存在，会出现Page Fault。
+有时候也许会注意到Page Fault还会是嵌套的，这是因为我们提供了异常（Exception）处理器，
+它会基于`sp`保存当前异常的上下文。然而，如果`sp`不在虚拟地址空间，保存上下文这个动作本身
+也是无法完成的，因为比如`sd x8, 8(sp)`指令保存上下文的值，就会用到`sp`。
+所以这里`sp`产生的错误会一直嵌套，无法进入异常处理在上下文保存后的正文部分。
+
+所以我们在进入`main`函数前，需要明白物理地址到自己的映射是为了执行“尴尬的代码”的。
+我们需要确保`pc`和`sp`都在虚拟地址空间里，才能进入`main`函数。
+如果`sp`暂时保存在物理地址空间，也是能进去的，不过需要在页表系统刷新快表后，手动调整`sp`
+的值。考虑到刷新快表次数会有很多，很难判断`sp`是第一次调整还是后续的调整（第一次需要
+一个加减法指令，后续无需指令），写代码就会非常麻烦。所以建议在`main`函数之前就调好，
+这样操作系统里面的函数就不需要担心这个了。
+
+归纳一个一般的规律：如果出现嵌套的分页错误，或者访问了莫名其妙的地址，
+一般的方法（输出调试等）非常难以定位问题，而且可能花费大量时间。
+开发者更需要首先考虑的是`sp`和`pc`是虚拟地址还是物理地址。
+建议使用gdb配合qemu下断点，观察地址的变化，在进入main函数前检查`sp`和`pc`的值。
+最好的设计是在运行时中全部调整为虚拟地址后，才能进入`main`函数。
+如果不符合这一点，就需要调整运行时的设计思路。
+
+### 2. 阅读OpenSBI源码
+
+运行时可以返回SBI吗？似乎不能，虽然它给`ra`设了一个值，但是用`ret`跳转到这个地址，
+（当然，首先要先清空`satp`寄存器，然后刷新TLB，让页表恢复到直接映射物理地址的状态）
+用GDB观察，它似乎只会在`0x80000000`定义给SBI的地址里相互跳转，没有观察到输出或者特殊的行为。
+OpenSBI对应的源码可能在[这里](https://github.com/riscv/opensbi/blob/51f0e4a0533fe8b5d713379ab3a6cb676add82da/firmware/fw_base.S)。
+暂时这部分设计为不可返回的（返回Never类型），只能由运行时调用SBI退出。
+
+猜测其它SBI设计可能和此类设计相似，都是不允许操作系统的main函数返回，需要调用SBI函数退出。
+需要阅读更多代码后才能下结论。
+
+### 3. 关于Make和Just
+
+两者都是很好的构建工具。经过这几天开发操作系统的实践经验，Just的脚本`justfile`
+不需要特别注意Tab还是空格，也不需要添加`.PHONY`，语法保留Make的熟悉程度同时，也和Rust比较相似。
+编写Make脚本时，好不容易把脚本写完了，才发现Tab和空格的使用还有规则，又要查资料改好一会儿。
+然后好不容易改好了，又发现还有`.PHONY`这种很容易忘了写的东西。
+所以相对Make脚本，Just脚本和Make语法非常接近，几乎可以说是无缝衔接。
+Just脚本经过长期的工程调整，不需要学习复杂的使用规则，编写脚本速度更快。
+尤其是开发者着急地要添加一些内容的时候，不需要被琐碎的问题打扰，效率更高。
+
+Just还有一个好处就是兼容所有的平台。比如Windows上是没内置Make的，想用Make就不得不安装
+非常庞大的msys、wsl或者minGW等等环境。相比之下，在所有平台安装Just的方法是很简单的。
+只需要输入以下代码：
+
+```bash
+cargo install just
+```
+
+就可以在任何已经安装Rust的电脑上安装Just。
+
+鉴于以上因素，这里强烈建议在后续的项目中使用Just代替Make，一是在全平台的兼容性，二是开发效率更高。
+Just的项目页面在这里：[https://github.com/casey/just](https://github.com/casey/just)。
+
+这里给出适用于本次操作系统开发的Just脚本：
+
+```makefile
+target := "riscv64imac-unknown-none-elf"
+mode := "debug"
+kernel_file := "target/" + target + "/" + mode + "/spicy-os"
+bin_file := "target/" + target + "/" + mode + "/kernel.bin"
+
+objdump := "rust-objdump --arch-name=riscv64"
+objcopy := "rust-objcopy --binary-architecture=riscv64"
+size := "rust-size"
+
+build: kernel
+    @{{objcopy}} {{kernel_file}} --strip-all -O binary {{bin_file}}
+
+kernel:
+    @cargo build --target={{target}}
+
+qemu: build
+    @qemu-system-riscv64 \
+            -machine virt \
+            -nographic \
+            -bios default \
+            -device loader,file={{bin_file}},addr=0x80200000 \
+            -smp threads=1
+
+run: build qemu
+
+asm: build
+    @{{objdump}} -D {{kernel_file}} | less
+
+size: build
+    @{{size}} -A -x {{kernel_file}}
+```
+
+在项目根目录下，保存为名称为`justfile`的文件就可以了。
+
+如果还需要调试支持，还要添加以下内容：
+
+```makefile
+gdb := "riscv64-unknown-elf-gdb"
+
+debug: build
+    @qemu-system-riscv64 \
+            -machine virt \
+            -nographic \
+            -bios default \
+            -device loader,file={{bin_file}},addr=0x80200000 \
+            -smp threads=1 \
+            -gdb tcp::11111 -S
+gdb: build
+    @gdb --eval-command="file {{kernel_file}}" --eval-command="target remote localhost:11111"
+```
