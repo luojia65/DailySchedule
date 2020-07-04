@@ -885,7 +885,32 @@ VirtIo是事实上的虚拟环境标准，包括了MMIO啊，还有很多现代�
 virtio_drivers库需要我们导入几个符号，这是常见的操作，可以用宏去限制，需要仔细阅读库的源码，
 考虑这几个部分的作用，函数定型之后才可以开始做宏。
 
-### 4. 修改堆栈设计
+### 4. 奇怪的知识增加了
+
+可能是一些普遍使用的编程小知识了。判断两个区间是否有重合部分的方法：
+
+```rust
+fn range_overlap<T: Ord + Copy>(a: Range<T>, b: Range<T>) -> bool {
+    T::min(a.end, b.end) > T::max(a.start, b.start)
+}
+```
+
+这样能判断`[a.start, a.end)`和`[b.start, b,end)`两个区间有没有公共区域。
+如果要判断两个左右都是闭合区间是否重合，就把`>`改成`>=`。
+
+如果不要求Copy写着会有点绕：
+
+```rust
+fn range_overlap<T: Ord>(a: &Range<T>, b: &Range<T>) -> bool {
+    let x = if a.end < b.end { &a.end } else { &b.end };
+    let y = if a.start > b.start { &a.start } else { &b.start };
+    x > y
+}
+```
+
+不知道是不是很多场合都需要这个功能，需要深入的调查。
+
+### 5. 修改堆栈设计
 
 这个部分似乎几天的进度里都在说这事儿，因为今天还涉及到一个`BlockCache`的问题，要怎么烧进静态内存里这样的。
 这两天先专心做完教程，后面预留3～5天时间仔细考虑所有的细节，重新设计一部分的API。
