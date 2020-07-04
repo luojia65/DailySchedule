@@ -890,26 +890,28 @@ virtio_drivers库需要我们导入几个符号，这是常见的操作，可以
 可能是一些普遍使用的编程小知识了。判断两个区间是否有重合部分的方法：
 
 ```rust
-fn range_overlap<T: Ord + Copy>(a: Range<T>, b: Range<T>) -> bool {
-    T::min(a.end, b.end) > T::max(a.start, b.start)
+fn range_overlap<T: Ord + Copy>(a: RangeInclusive<T>, b: RangeInclusive<T>) -> bool {
+    T::min(a.end, b.end) >= T::max(a.start, b.start)
 }
 ```
 
-这样能判断`(a.start, a.end)`和`(b.start, b,end)`两个区间有没有公共区域。
-如果要判断两个左右都是闭合区间是否重合，就把`>`改成`>=`。
+这样能判断`[a.start, a.end]`和`[b.start, b,end]`两个区间有没有公共区域。
+如果要判断两个左右都是闭合区间是否重合，就把`>=`改成`>`。
 
 如果不要求Copy写着会有点绕：
 
 ```rust
-fn range_overlap<T: Ord>(a: &Range<T>, b: &Range<T>) -> bool {
+fn range_overlap<T: Ord>(a: &RangeInclusive<T>, b: &RangeInclusive<T>) -> bool {
     let x = if a.end < b.end { &a.end } else { &b.end };
     let y = if a.start > b.start { &a.start } else { &b.start };
-    x > y
+    x >= y
 }
 ```
 
 不知道是不是很多场合都需要这个功能，需要深入的调查。
 本次实验里，类似的方法能用于判断两个页地址区间有没有重合的部分。
+
+（左闭右开的区间是本次实验最常用的，有时间再找比较简单的判断方法）
 
 ### 5. 修改堆栈设计
 
