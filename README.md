@@ -903,11 +903,11 @@ fn range_overlap<T: Ord + Copy>(a: Range<T>, b: Range<T>) -> bool {
 
 ```rust
 fn range_overlap<T: Ord>(a: &Range<T>, b: &Range<T>) -> bool {
-    let x = if a.end < b.end { &a.end } else { &b.end };
-    let y = if a.start > b.start { &a.start } else { &b.start };
-    x > y
+    <&T>::min(&a.end, &b.end) > <&T>::max(&a.start, &b.start)
 }
 ```
+
+注意对任意可全序比较的T，&T也是可全序比较的。
 
 这属于非常简单的编程知识了。本次实验里，类似的方法能用于判断两个页地址区间有没有重合的部分。
 
