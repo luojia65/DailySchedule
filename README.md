@@ -896,8 +896,8 @@ fn range_overlap<T: Ord + Copy>(a: Range<T>, b: Range<T>) -> bool {
 ```
 
 这样能判断`(a.start, a.end)`和`(b.start, b.end)`两个区间有没有公共区域。
-其实判断左闭右开区间`[a.start, a.end)`这样，方法是相同的
-如果要判断两个左右都是闭合区间是否重合，就把`>`改成`>=`。
+其实判断两个左闭右开区间`[start, end)`这样（或者左开右闭区间`(start, end]`），方法是相同的。
+如果要判断两个左右都是闭合区间`[start, end]`是否重合，就把`>`改成`>=`。
 
 如果不要求Copy写着会有点绕：
 
