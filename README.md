@@ -1293,7 +1293,7 @@ fn machine_main() -> ! {
     rustsbi::set_legacy_stdio(EmbeddedHalSerial::new(&mut serial));
     // 创建一个静态生成的设备树宏
     let dtb = rustsbi::dtb! {
-        ... // 填写你需要的设备
+        ... // 填写你需要的设备。除了SoC自带的片内外设，你还可以添加外挂的外设
     };
     // 3. 修改mideleg、medeleg寄存器，将中断委托给rustsbi（略）
     // 4. 启动SBI（mhartid将在rustsbi内部被读取）
