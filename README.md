@@ -1290,11 +1290,14 @@ fn machine_main() -> ! {
     let clocks = dp.CLOCKS.constrain(/*...*/);
     let mut serial = dp.SERIAL.configure(/*...*/);
     // 2. 从embedded-hal裸机环境创建SBI环境
-    rustsbi::set_legacy_stdio(EmbeddedHalSerial(&mut serial));
-        // ...其它的SBI外设
+    rustsbi::set_legacy_stdio(EmbeddedHalSerial::new(&mut serial));
+    // 创建一个静态生成的设备树宏
+    let dtb = rustsbi::dtb! {
+        ... // 填写你需要的设备
+    };
     // 3. 修改mideleg、medeleg寄存器，将中断委托给rustsbi（略）
-    // 4. 启动SBI
-    rustsbi::start()
+    // 4. 启动SBI（mhartid将在rustsbi内部被读取）
+    rustsbi::start(dtb)
 }
 
 #[riscv_rt::exception] // 或者别的运行时库
