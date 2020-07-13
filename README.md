@@ -1297,10 +1297,10 @@ fn machine_main() -> ! {
     rustsbi::start()
 }
 
-#[riscv_rt::exception]
+#[riscv_rt::exception] // 或者别的运行时库
 fn handle_exception(ctx: &TrapFrame) {
-    // 如果是ecall异常
-    if scause::read().cause() == Trap::Exception(Exception::UserEnvCall) {
+    // 如果是操作系统传来的ecall异常
+    if mcause::read().cause() == Trap::Exception(Exception::SupervisorEnvCall) {
         let params = [ctx.a2, ctx.a3, ctx.a4, ctx.a5];
         // 调用rust_sbi库的处理函数
         let ans = rustsbi::ecall(ctx.a0, ctx.a1, params);
@@ -1331,6 +1331,7 @@ riscv_sbi_rt::boot_page_sv39! {
 
 // 处理内核中断部分，包括调用调度器和切换上下文，由操作系统的库完成
 // #[exception] fn SupervisorTimer(...) 这样的，大部头代码都在操作系统的库里面
+// 包括UserEnvCall，不过这就属于系统调用的范畴了，不属于SBI调用的范畴
 ```
 
 这两段代码写完后，适配过程就完成了。我们编写S部分代码时，只是帮助操作系统挑选简单的运行时，
