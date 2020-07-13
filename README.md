@@ -1291,13 +1291,10 @@ fn machine_main() -> ! {
     let mut serial = dp.SERIAL.configure(/*...*/);
     // 2. 从embedded-hal裸机环境创建SBI环境
     rustsbi::set_legacy_stdio(EmbeddedHalSerial::new(&mut serial));
-    // 创建一个静态生成的设备树宏
-    let dtb = rustsbi::dtb! {
-        ... // 填写你需要的设备。除了SoC自带的片内外设，你还可以添加外挂的外设
-    };
+    // 这里应该初始化设备树，工程设计还需要考虑，暂时不给出
     // 3. 修改mideleg、medeleg寄存器，将中断委托给rustsbi（略）
-    // 4. 启动SBI（mhartid将在rustsbi内部被读取）
-    rustsbi::start(dtb)
+    // 4. 启动SBI（mhartid、dtb_pa将在rustsbi内部被读取）
+    rustsbi::start()
 }
 
 #[riscv_rt::exception] // 或者别的运行时库
@@ -1346,6 +1343,11 @@ riscv_sbi_rt::boot_page_sv39! {
 M层需要添加兼容代码；S层需要设计初始页表内容，还需要指定运行时。
 这样因为工作量小，甚至可以只提供参考实现，代码由移植开发者自己完成，极大的增强了灵活性和模块化特性。
 今天做了一些架构的尝试，探索的参考代码在[这里](https://github.com/luojia65/two-level-os-lab/)。
+这里M层有点像主板固件，S层有点像选择操作系统的界面，比如你要从U盘启动还是硬盘启动这种东西。
+例子里给出的是SBI，SBI只能选一个操作系统，跳转到对应的操作系统就可以了；
+而可能出现的UEFI应该是能从很多系统中选取需要的一个。
+未来这里出现网络无盘系统这些也是可能的。不需要链接操作系统，只需要写一个特殊的S层就可以了，
+从因特网下载系统，直接保存到RAM内存里，然后跳转到RAM内存。
 
 ### 2. 为什么Rust嵌入式开发没有bsp的概念
 
