@@ -1418,3 +1418,6 @@ qemu: build
             -device loader,file={{m-bin-file}},addr=0x80000000 \
             -device loader,file={{s-bin-file}},addr=0x80200000
 ```
+
+另外是可以成功引导操作系统了，操作系统调用了println，但是暂时还没有陷入处理函数，
+所以还会出异常，这个用调试器跟踪是已经确定异常来源了，需要添加陷入处理函数。
