@@ -71,6 +71,8 @@
 
 [第二十七天（2020年7月21日）](#第27天)
 
+[第二十八天（2020年7月22日）](#第28天)
+
 ## 第1天
 
 ### 1. 尝试提出适配SBI到Rust的思路
@@ -1640,7 +1642,8 @@ VPN[0]编号是0，却是最后一次解析的。
 ```text
 4.3.2 Virtual Address Translation Process
     ...
-    7. If i > 0 and pte.ppn[i − 1 : 0] ̸= 0, this is a misaligned superpage; stop and raise a page-fault exception corresponding to the original access type.
+    7. If i > 0 and pte.ppn[i − 1 : 0] ̸= 0, this is a misaligned superpage; 
+    stop and raise a page-fault exception corresponding to the original access type.
     ...
 ```
 
@@ -1660,3 +1663,7 @@ K210只有6M的片内闪存。如果对齐到2M，SBI先占用前面2M（即使�
 
 未来写动态的操作系统可能就可以这样做。创建Sv39页表，先判断是否对齐到1G，然后是否对齐到2M，然后是4K。
 这是64位的，在32位下首先一个页表又1024项（而不是512项），而且物理地址有34位，所以是创建Sv32，先对齐到4G，再是4M，再是4K。
+
+## 第28天
+
+今天把地址无关的内核完成了，修复了很多小问题。
