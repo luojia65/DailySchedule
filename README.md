@@ -1639,13 +1639,11 @@ VPN[0]编号是0，却是最后一次解析的。
 
 这就符合标准的规定了。事实上，RISC-V的标准给出了从虚拟地址转换到物理地址的流程，流程里是这样说明的：
 
-```text
-4.3.2 Virtual Address Translation Process
-    ...
-    7. If i > 0 and pte.ppn[i − 1 : 0] ̸= 0, this is a misaligned superpage; 
-    stop and raise a page-fault exception corresponding to the original access type.
-    ...
-```
+> 4.3.2 Virtual Address Translation Process
+> ...
+> 7. If i > 0 and pte.ppn[i − 1 : 0] ̸= 0, this is a misaligned superpage;
+> stop and raise a page-fault exception corresponding to the original access type.
+> ...
 
 这就能解释我遇到的问题了。我可能未来要学习CPU的架构，包括快表的硬件实现，才能彻底理解标准为什么要这样规定。
 
