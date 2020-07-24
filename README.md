@@ -423,7 +423,7 @@ Issue地址在[这里](https://github.com/rust-lang/rust/issues/29603)。好像2
 检查的，但是在没有`std`的目标下不存在`test`框架，在`.cargo/config`定义目标后就出现无法检查的问题。
 Phil-opp的博客提供了一个[自定义测试框架的方法](https://github.com/phil-opp/blog_os/blob/788d6a7e2295cc45cf327637c0ba58638d5f1346/blog/content/second-edition/posts/04-testing/index.md#custom-test-frameworks)。但这个方法[一直没有稳定](https://github.com/rust-lang/rust/blob/9ebf47851a357faa4cd97f4b1dc7835f6376e639/src/doc/unstable-book/src/language-features/custom-test-frameworks.md)，最好等到稳定后再考虑此种思路。
 现在实时检查几乎很难使用，如果不在`.cargo/config`定义目标，它默认使用当前系统，但`riscv`定义的结构和汇编代码
-就会被归为语法错误。如果在文件里定义目标，又因为没有test框架不能使用。暂时还是不好解决的问题。
+就会被归为语法错误。如果在文件里定义目标，又因为没有测试框架不能使用。暂时还是不好解决的问题。
 
 今天多次添加`REGION_HEAP`段又删减，是因为还没有考虑它和物理内存的联系。
 后续的过程里尝试继续彻底摸清楚物理内存下的操作机制，希望给出一个较好的设计。
