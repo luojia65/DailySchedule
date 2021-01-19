@@ -106,6 +106,30 @@ async fn count_audio_devices(token_str: &str) -> usize {
 }
 ```
 
+```S
+# async fn count_audio_devices(token_str: &str) -> usize
+    # 第一个协程开始
+    # mv    a0, a0
+    # mv    a1, a1 ; token_str
+    call    hash_token
+    # mv    a0, a0 ; token_hash
+    li      a7, MODULE_AUDIO
+    li      a6, LIST_AUDIO_DEVICES
+    # 第一个协程结束
+    ecall
+    # a0 = cur, ptr
+    # 第三个协程开始
+    li      t0, 0 # t0 = ans
+1:  bnez    a0, 1f  
+    ld      t1, 0(a0) # t1 = nxt
+    addi    t0, t0, 1
+    mv      a0, t1
+    j       1b
+1:  mv      a0, t0 # a0 = ans
+    ret 
+    # 第三个协程结束
+```
+
 在RISC-V下，系统调用通过ecall指令实现。这里，“ecall”指令也是我们陷入内核的方法，
 也顺便解决了上文中如何“让出资源”的问题；“ecall”就可以是很多语言中的“yield”语句。
 
