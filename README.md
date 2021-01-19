@@ -1,5 +1,11 @@
 # DailySchedule
 
+## 冬季内核项目（2021年1月）
+
+[开发日志](2021-winter.md)
+
+## 操作系统实习（2020年8月）
+
 [OS实验报告](os-lab-report.md)
 
 [第一阶段日志](stage-1.md)
