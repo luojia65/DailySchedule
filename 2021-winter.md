@@ -120,3 +120,14 @@ async fn count_audio_devices(token_str: &str) -> usize {
 
 所有的设备和文件系统都可以做成协程。希望异步内核得到验证后，能实际推出一些应用，
 给出更多的测试，来获得更好的推广效果。
+
+## 第2天（1月20日）
+
+今天忙别的事情了，休息一天。
+
+阅读了下面的文章：
+
+[200行讲清楚Future是什么](https://github.com/wyfcyx/osnotes/blob/master/Rust/future-in-200-lines.md)，由吴一凡学长翻译
+[异步Rust简介](https://github.com/wyfcyx/osnotes/blob/master/Rust/rust-async-introduction/rust-async-new.pdf)，吴一凡学长
+
+先前对async/await的理解似乎不是很准确？明天继续做这一部分。
