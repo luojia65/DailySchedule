@@ -127,7 +127,7 @@ async fn count_audio_devices(token_str: &str) -> usize {
 
 阅读了下面的文章：
 
-[两百行代码讲透Rust Futures](https://github.com/wyfcyx/osnotes/blob/master/Rust/future-in-200-lines.md)，由吴一凡学长翻译
-[异步Rust简介](https://github.com/wyfcyx/osnotes/blob/master/Rust/rust-async-introduction/rust-async-new.pdf)，吴一凡学长
+- [两百行代码讲透Rust Futures](https://github.com/wyfcyx/osnotes/blob/master/Rust/future-in-200-lines.md)，由吴一凡学长翻译
+- [异步Rust简介](https://github.com/wyfcyx/osnotes/blob/master/Rust/rust-async-introduction/rust-async-new.pdf)，吴一凡学长
 
 先前对async/await的理解似乎不是很准确？明天继续做这一部分。
