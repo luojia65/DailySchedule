@@ -300,21 +300,25 @@ fn try_pop_task() -> TaskResult<SharedTaskHandle> {
     // 此时应当尽可能切换到别的地址空间
     if SHARED_SLOT_TIMER.timed_up_ratio(95, 100) { 
         // 应当让出处理器资源，分配给别的地址空间
-        TaskResult::should_finish_yield()
+        TaskResult::should_yield()
     } else {
         // 尚未到达时间片的95%，尽量调度地址空间相同的任务
         let mut scheduler = SHARED_SCHEDULER.lock();
-        let task = scheduler.peek_task(); // 写的时候注意不要死锁
-        // 如果是其它上下文的任务
-        if task.should_switch() {
-            // 应当让出处理器资源，这里由内核执行真正的pop_task
-            // 此处drop函数把scheduler的锁释放了
-            return TaskResult::should_finish_yield()
+        if let Some(task) = scheduler.peek_task() {
+            // 如果是其它上下文的任务
+            if task.should_switch() {
+                // 应当让出处理器资源，这里由内核执行真正的pop_task
+                // 此处drop函数把scheduler的锁释放了
+                return TaskResult::should_yield()
+            }
+            scheduler.pop_task(); // 因为锁上了，所以peek和pop操作的任务相同
+            drop(scheduler); // 释放锁
+            // 应当执行一个任务
+            TaskResult::some_task(task)
+        } else {
+            // 如果已经没有任务了
+            TaskResult::finished()
         }
-        scheduler.pop_task(); // 因为锁上了，所以peek和pop操作的任务相同
-        drop(scheduler); // 释放锁
-        // 应当执行一个任务
-        TaskResult::some_task(task)
     }
     // 另外，到达时间片的100%，会产生时钟中断，由内核处理上下文切换过程
     // 此时属于上下文过长的情况，运行速度相当于基于线程的内核
@@ -327,18 +331,26 @@ fn start() -> ! { // 返回永无类型（never type）
         let termination = main().await;
         sender.send(termination)
     });
-    // 不断从队列拿出当前进程的任务。TaskResult可能是Task(task)或者ShouldFinishYield
-    while let Task(task) = try_pop_task() {
-        // 造一个上下文，它将包含一个唤醒器
-        let waker = waker_ref(&task); 
-        let context = Context::from_waker(&*waker);
-        // 调用SharedTaskHandle，得到里面包含的Future
-        let mut future = task.get_future();
-        // 唤醒这个Future
-        let ret = future.poll(&mut context);
-        // 如果Future返回了Pending，就把它再次加入队列中
-        if let Poll::Pending = ret {
-            push_task(task);
+    // 不断从队列拿出当前进程的任务。TaskResult可能是Task(task)、ShouldYield或Finished
+    loop {
+        match try_pop_task() {
+            TaskResult::Task(task) => {
+                // 造一个上下文，它将包含一个唤醒器
+                let waker = waker_ref(&task); 
+                let context = Context::from_waker(&*waker);
+                // 调用SharedTaskHandle，得到里面包含的Future
+                let mut future = task.get_future();
+                // 唤醒这个Future
+                let ret = future.poll(&mut context);
+                // 如果Future返回了Pending，就把它再次加入队列中
+                if let Poll::Pending = ret {
+                    push_task(task);
+                }
+            },
+            TaskResult::ShouldYield => {
+                syscall::yield_now()
+            },
+            TaskResult::Finished => break // 已经结束了，退出控制流
         }
     }
     // 没有任务时，main函数一定返回了。使用系统调用陷入内核，退出程序
@@ -349,4 +361,11 @@ fn start() -> ! { // 返回永无类型（never type）
 async fn main() {
     // 真正的程序逻辑在这里
 }
+```
+
+然后是内核态部分。
+
+```rust
+// 内核态
+fn syscall() {} // todo
 ```
