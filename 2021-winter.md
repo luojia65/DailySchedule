@@ -365,7 +365,33 @@ async fn main() {
 
 ```rust
 // 内核态
-fn syscall() {} // todo
+static SHARED_SCHEDULER: SharedScheduler = { ... };
+static SHARED_SLOT_TIMER: SharedSlotTimer = { ... };
+// 切换当前处理器资源，读取下一个进程的的任务，开始运行
+fn syscall_yield_now() -> ! {
+    let mut scheduler = SHARED_SCHEDULER.lock();
+    let task = scheduler.pop_task();
+    drop(scheduler);
+    // 切换到下一个任务，包括跳转到u层
+    if task.saved_with_context() {
+        // 如果有上下文，读取上下文
+        restore_task_context(task)
+    } else {
+        // 如果没有上下文，不需要读取上下文
+        restore_task_no_context(task)
+    }
+}
+// 退出用户进程
+fn syscall_exit() -> ! {
+    // 读取tp寄存器，得到当前的进程
+    let current_process = Processor::current_process_mut(); 
+    // 移除当前进程所有的协程
+    let mut scheduler = SHARED_SCHEDULER.lock();
+    scheduler.remove_all(current_process.tasks());
+    drop(scheduler);
+    // 立即切换任务
+    syscall_yield_now()
+}
 ```
 
 今天要给Rust杂志写稿子，就暂时做到这里。
